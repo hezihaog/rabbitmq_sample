@@ -10,6 +10,8 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * 路由模式，相比发布订阅模式，多了RoutingKey
+ *
+ * 类型：BuiltinExchangeType.DIRECT
  */
 public class Producer03Routing {
     /**

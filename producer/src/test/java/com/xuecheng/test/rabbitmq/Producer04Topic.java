@@ -9,15 +9,17 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * 生产者2，发布订阅模式，一个消息可以被多个消费者进行消费
+ * 通配符模式，相比发布路由模式，RoutingKey多了通配符匹配
  * <p>
- * 应用场景：话费充值或转账的通知，需要发送邮件和短信给用户
- * 差异：相比Work Queues模式，多了一个交换机和队列（就是多个队列，而Work Queues只有一个队列）
- *      如果多个消费者监听同一个队列，那么会分摊消息
- *
- * 类型：BuiltinExchangeType.FANOUT
+ * 通配符：用#或*代表通配符
+ * #：能匹配一个词或多个词，每个词之间用.分割，例如inform.email、inform.sms、inform.email.sms
+ * *：只能匹配一个词，例如inform.email、inform.sms
+ * <p>
+ * 应用场景：根据用户的配置，决定发邮件通知还是发短信通知，或者邮件和短信都发送
+ * <p>
+ * 类型：BuiltinExchangeType.TOPIC
  */
-public class Producer02Publish {
+public class Producer04Topic {
     /**
      * Email消息的队列
      */
@@ -29,7 +31,15 @@ public class Producer02Publish {
     /**
      * 交换机
      */
-    private static final String EXCHANGE_FANOUT_INFORM = "exchange_fanout_inform";
+    private static final String EXCHANGE_TOPICS_INFORM = "exchange_topics_inform";
+    /**
+     * 邮件RoutingKet，使用通配符，只接收邮件的用户，发送inform.email。都接收的用户，发送inform.email.sms
+     */
+    public static final String ROUTINGKEY_EMAIL = "inform.#.email.#";
+    /**
+     * 短信RoutingKey，使用通配符，只接收短信的用户，发送inform.sms。都接收的用户，发送inform.email.sms
+     */
+    public static final String ROUTINGKEY_SMS = "inform.#.sms.#";
 
     public static void main(String[] args) {
         //1.使用连接工厂，创建连接，并和MQ建立连接
@@ -72,16 +82,18 @@ public class Producer02Publish {
              *  topic：对应通配符工作模式
              *  headers：对应headers工作模式
              */
-            channel.exchangeDeclare(EXCHANGE_FANOUT_INFORM, BuiltinExchangeType.FANOUT);
+            channel.exchangeDeclare(EXCHANGE_TOPICS_INFORM, BuiltinExchangeType.TOPIC);
             //让交换机和队列进行绑定
             /**
              * 参数：String queue, String exchange, String routingKey
              * 1.queue：队列名称
              * 2.exchange：交换机名称
-             * 3.routingKey：路由Key，在发布订阅用不上，设置为空字符串即可，它的作用是根据路由Key的值，将消息转发到指定的队列中
+             * 3.routingKey：路由Key，它的作用是根据路由Key的值，将消息转发到指定的队列中
              */
-            channel.queueBind(QUEUE_INFORM_EMAIL, EXCHANGE_FANOUT_INFORM, "");
-            channel.queueBind(QUEUE_INFORM_SMS, EXCHANGE_FANOUT_INFORM, "");
+            //绑定邮件
+            channel.queueBind(QUEUE_INFORM_EMAIL, EXCHANGE_TOPICS_INFORM, ROUTINGKEY_EMAIL);
+            //绑定短信
+            channel.queueBind(QUEUE_INFORM_SMS, EXCHANGE_TOPICS_INFORM, ROUTINGKEY_SMS);
 
             /**
              * 参数：String exchange, String routingKey, BasicProperties props, byte[] body
@@ -91,10 +103,28 @@ public class Producer02Publish {
              * 3.props：消息属性
              * 4.body，消息内容
              */
+            //只发送邮件的消息
             for (int i = 0; i < 5; i++) {
-                String message = "发布订阅模式的消息";
+                String message = "通配符模式的消息，我只有接收到<邮件消息>的用户能看到";
                 //4）发送消息，将消息发给交换机即可，交换机再转发到队列给消费者处理
-                channel.basicPublish(EXCHANGE_FANOUT_INFORM, null, null, message.getBytes());
+                //注意：发消息时，还需要指定RoutingKey
+                channel.basicPublish(EXCHANGE_TOPICS_INFORM, "inform.email", null, message.getBytes());
+                System.out.println("发送消息达到mq：" + message);
+            }
+            //只发送短信的消息
+            for (int i = 0; i < 5; i++) {
+                String message = "通配符模式的消息，我只有接收到<短信消息>的用户能看到";
+                //4）发送消息，将消息发给交换机即可，交换机再转发到队列给消费者处理
+                //注意：发消息时，还需要指定RoutingKey
+                channel.basicPublish(EXCHANGE_TOPICS_INFORM, "inform.sms", null, message.getBytes());
+                System.out.println("发送消息达到mq：" + message);
+            }
+            //既接收email又接收sms的消息
+            for (int i = 0; i < 5; i++) {
+                String message = "通配符模式的消息，接收邮件或短信的用户都能看到";
+                //4）发送消息，将消息发给交换机即可，交换机再转发到队列给消费者处理
+                //注意：发消息时，还需要指定RoutingKey
+                channel.basicPublish(EXCHANGE_TOPICS_INFORM, "inform.email.sms", null, message.getBytes());
                 System.out.println("发送消息达到mq：" + message);
             }
         } catch (Exception e) {
