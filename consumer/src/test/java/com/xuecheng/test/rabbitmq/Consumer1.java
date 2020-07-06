@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * RabbitMQ的消息消费方
+ * RabbitMQ的消息消费方，一个生产者对应一个消费者
  */
 public class Consumer1 {
     /**

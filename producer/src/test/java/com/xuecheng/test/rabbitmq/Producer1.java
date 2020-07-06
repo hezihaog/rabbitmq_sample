@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * RabbitMQ的消息生产方
+ * RabbitMQ的消息生产方，一个生产者对应一个消费者
  */
 public class Producer1 {
     /**
@@ -28,7 +28,7 @@ public class Producer1 {
         //1.使用连接工厂，创建连接，并和MQ建立连接
         ConnectionFactory connectionFactory = new ConnectionFactory();
         //设置IP地址和端口号
-        connectionFactory.setHost("127,0.0.1");
+        connectionFactory.setHost("127.0.0.1");
         connectionFactory.setPort(5672);
         //设置用户名和密码
         connectionFactory.setUsername("guest");
