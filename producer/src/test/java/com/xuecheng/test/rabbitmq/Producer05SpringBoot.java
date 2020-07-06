@@ -18,7 +18,7 @@ public class Producer05SpringBoot {
     private RabbitTemplate rabbitTemplate;
 
     /**
-     * RabbitTemplate发送消息
+     * RabbitTemplate发送邮件消息
      */
     @Test
     public void testSendEmail() {
@@ -31,6 +31,24 @@ public class Producer05SpringBoot {
          */
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_TOPICS_INFORM,
                 "inform.email",
+                message
+        );
+    }
+
+    /**
+     * RabbitTemplate发送短信消息
+     */
+    @Test
+    public void testSendSms() {
+        String message = "send sms msg to user";
+        /**
+         * 参数
+         * 1.交换机名称
+         * 2.RoutingKey
+         * 3.消息内容
+         */
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_TOPICS_INFORM,
+                "inform.sms",
                 message
         );
     }
