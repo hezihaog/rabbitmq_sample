@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * RabbitMQ的消息消费方，一个生产者对应一个消费者
+ * RabbitMQ的消息消费方，Work Queues模式，一个生产者对应多个消费者，采用轮训的方式，不允许一个消息，被多个消费者消费
+ *
+ * 应用场景：当有一个计算任务非常消耗CPU资源，需要多个消费者来干活时，使用该模式最好
  */
 public class Consumer1 {
     /**
